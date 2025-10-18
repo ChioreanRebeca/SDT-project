@@ -1,12 +1,12 @@
-#Locafy — Local Business Discovery & Listings
+# Locafy — Local Business Discovery & Listings
 
-##Problem Statement
+## Problem Statement
 
 The objective of Locafy, a web platform, is to help local businesses register and present their services, to enable residents to discover, review, and to contact those businesses.
 The system must support distinct user roles (business owners, customers, administrators), provide searchable, image-rich business profiles, and ensure secure, maintainable deployment (Spring Boot backend, Spring Security, Docker). 
 The project will evaluate three architectural approaches — monolithic, containerized (modular), and microservices — and compare them based on deployment complexity, scalability, data consistency, and operational cost.
 
-##Functionalities:
+## Functionalities:
 
 1. Registration & Login:
 - Implement user registration and authentication functionalities.
