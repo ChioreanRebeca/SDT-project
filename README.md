@@ -9,23 +9,49 @@ The project will evaluate three architectural approaches — monolithic, contain
 ## Functionalities:
 
 1. Registration & Login:
-- Implement user registration and authentication functionalities.
-- Ensure secure storage of user data and sensitive information.
-- Provide a seamless and user-friendly registration process.
-- Supports three distinct roles: Business Owners, Customers, and Administrators.
-- Role-based access is securely managed using Spring Security.
+   - Implement user registration and authentication functionalities.
+   - Ensure secure storage of user data and sensitive information.
+   - Provide a seamless and user-friendly registration process.
+   - Supports three distinct roles: Business Owners, Customers, and Administrators.
+   - Role-based access is securely managed using Spring Security.
 
 2. Business Listing Management
-- Business owners can create and manage business profiles.
-- Upload storefront and service-related images/ contact information/ location/ business website details
+   - Business owners can create and manage business profiles.
+   - Upload storefront and service-related images/ contact information/ location/ business website details
 
 3. Intelligent Business Discovery
    - Customers can search, filter, and explore local businesses.
    - Detailed business pages display images, descriptions, services, ratings, and reviews.
      
 4. Profile & Interaction
-- Dedicated profile pages for both businesses and customers.
-- Customers can review, favorite, and contact businesses directly.
+   - Dedicated profile pages for both businesses and customers.
+   - Customers can review, favorite, and contact businesses directly.
+
+## Software design patterns
+1. Structural: Strategy Pattern
+   - used for business search and filtering logic. Dynamically pick strategy based on user input
+   ```
+     public interface SearchStrategy {
+          List<Business> search(String query);
+      }
+      
+      public class NameSearchStrategy implements SearchStrategy { ... }
+      public class CategorySearchStrategy implements SearchStrategy { ... }
+      public class LocationSearchStrategy implements SearchStrategy { ... }
+   ```
+
+2. Singleton Pattern
+   - only one instance of cache, email sender, rate limiter. Handled automatically by SpringAPI with @Service scope.
+     
+3. Observer Pattern
+   - trigger events when a new message is sent or when a review is posted
+   ```
+   EventBus.publish(new ReviewCreatedEvent(review));
+   ```
+4. Behavioral: Template Method Pattern
+   - log in profile rendering: based on role it will link to customer profile or business profile or admin dashboard
+5. Adapter Pattern
+   - internal services independent of vendor changes. Applied when using Google Maps Api.
 
   
 ## Team members
