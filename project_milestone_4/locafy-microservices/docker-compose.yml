@@ -3,7 +3,7 @@ version: '3.8'
 services:
   discovery-server:
     build: ./discovery-server
-    container_name: locafy-discovery
+    container_name: discovery-server
     ports:
       - "8761:8761"
     environment:
@@ -11,7 +11,7 @@ services:
 
   api-gateway:
     build: ./api-gateway
-    container_name: locafy-gateway
+    container_name: api-gateway
     ports:
       - "8080:8080"
     environment:
@@ -22,7 +22,9 @@ services:
 
   business-service:
     build: ./business-service
-    container_name: locafy-business
+    container_name: business-service
+    ports:
+      - "8081:8081"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     depends_on:
@@ -30,7 +32,9 @@ services:
 
   notification-service:
     build: ./notification-service
-    container_name: locafy-notification
+    container_name: notification-service
+    ports:
+      - "8083:8083"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     depends_on:
@@ -38,10 +42,11 @@ services:
 
   review-service:
     build: ./review-service
-    container_name: locafy-review
+    container_name: review-service
+    ports:
+      - "8082:8082"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     depends_on:
       - discovery-server
       - business-service
-      - notification-service

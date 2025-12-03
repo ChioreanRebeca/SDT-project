@@ -1,5 +1,5 @@
 # 1. Start with Java 17
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-alpine
 
 # 2. Set the working directory inside the container
 WORKDIR /app
