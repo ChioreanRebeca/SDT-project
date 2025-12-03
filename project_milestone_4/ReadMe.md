@@ -17,17 +17,26 @@ Locafy is a local business discovery platform implemented using Spring Boot Micr
 
 ## How to Run
 
-### Step 1: Build the Microservices
-Navigate to the root directory and run Maven to build all services. 
-*(If you are in a terminal and have a parent pom, otherwise build individually)*:
+### Step 1: Build the Microservices Jar's
+Navigate to the directory of each microservice and run Maven to build it. 
 
 ```bash
-# Example if building individually
-cd discovery-server && mvn clean package -DskipTests && cd ..
-cd api-gateway && mvn clean package -DskipTests && cd ..
-cd business-service && mvn clean package -DskipTests && cd ..
-cd review-service && mvn clean package -DskipTests && cd ..
-cd notification-service && mvn clean package -DskipTests && cd ..
+# example for packaging all Maven packages(one by one)
+cd discovery-server && mvn clean package -DskipTests
+cd api-gateway && mvn clean package -DskipTests 
+cd business-service && mvn clean package -DskipTests 
+cd review-service && mvn clean package -DskipTests
+cd notification-service && mvn clean package -DskipTests 
+```
+### Step 2: Build the Containers
+Navigate to the root directory and run docker to build all service containers. 
+```bash
+# example for building all docker containers
+cd locafy-microservices
+docker compose up --build
+```
+### Step 3: Look at the Eureka Discovery server to check if all services are runnig
+click here[http://localhost:8761/]
 
-
-!!!! Change the text in here./ Information is outdated !!!!!
+### Step 4: Run Postman Tests
+Run the postman tests. The test file is saved under the name 'locafy-test.json'
