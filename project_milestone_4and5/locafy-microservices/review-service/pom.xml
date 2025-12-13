@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>notification-service</artifactId>
+	<artifactId>review-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>notification-service</name>
-	<description>Notification Service for Locafy</description>
+	<name>review-service</name>
+	<description>Review Service for Locafy</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -39,6 +39,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>

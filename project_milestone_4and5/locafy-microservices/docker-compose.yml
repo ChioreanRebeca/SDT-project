@@ -30,15 +30,17 @@ services:
     depends_on:
       - discovery-server
 
-  notification-service:
-    build: ./notification-service
-    container_name: notification-service
+
+  # EXTENDED MICROSERV. with RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
     ports:
-      - "8083:8083"
+      - "5672:5672"   # App communication port
+      - "15672:15672" # Management dashboard foir RabbitMQ (http://localhost:15672)
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-    depends_on:
-      - discovery-server
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
   review-service:
     build: ./review-service
@@ -47,6 +49,21 @@ services:
       - "8082:8082"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_RABBITMQ_HOST=rabbitmq # Connect to Rabbit container
     depends_on:
       - discovery-server
       - business-service
+      - rabbitmq # Wait for RabbitMQ
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - discovery-server
+      - rabbitmq
+
