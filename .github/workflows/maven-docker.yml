@@ -28,7 +28,12 @@ jobs:
 
     # 3. Compile and Package with Maven
     - name: Build with Maven
-      run: mvn clean package -DskipTests
+      run: |
+        mvn clean package -DskipTests -f discovery-server/pom.xml
+        mvn clean package -DskipTests -f api-gateway/pom.xml
+        mvn clean package -DskipTests -f business-service/pom.xml
+        mvn clean package -DskipTests -f review-service/pom.xml
+        mvn clean package -DskipTests -f notification-service/pom.xml
 
     # 4. Build Docker Images (CI Step)
     - name: Build Docker Images
