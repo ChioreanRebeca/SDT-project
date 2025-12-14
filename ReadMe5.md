@@ -105,3 +105,21 @@ public class ReviewServiceApplication {
         SpringApplication.run(ReviewServiceApplication.class, args);
     }
 }
+
+
+
+Use this for Docker and not the intelij plugin:  docker compose up --build
+
+
+
+# 1. Ensure fresh JARs are available
+mvn clean package -DskipTests
+
+# 2. Build and start containers using the V2 plugin
+docker compose up --build
+
+
+Step 4: CI/CD Pipeline (GitHub Actions)
+This pipeline will run every time you push code to GitHub. It will verify that your Java code compiles and that your Docker containers can build and start up successfully.
+
+Create this file structure in your project root: .github/workflows/maven-docker.yml
