@@ -1,125 +1,184 @@
-# Locafy - Microservices Architecture - EXTENDED
+# Locafy – Microservices Architecture (Extended)
 
-Locafy is a local business discovery platform implemented using Spring Boot Microservices.
+Locafy is a **local business discovery platform** implemented using **Spring Boot Microservices**.
 
-## Architecture
+---
 
-1.  **Discovery Server (Eureka):** Service Registry.
-2.  **API Gateway:** Routes all traffic (Port 8080).
-3.  **Business Service:** Manages business profiles (Uses Builder & Strategy patterns).
-4.  **Review Service:** Manages reviews. Validates business existence via REST calls to Business Service.
-5.  **Notification Service:** Simulates sending alerts when reviews are posted.
+## Architecture Overview
 
+- **Discovery Server (Eureka)** – Service Registry
+- **API Gateway** – Routes all traffic (**Port 8080**)
+- **Business Service** – Manages business profiles (uses **Builder** & **Strategy** patterns)
+- **Review Service** – Manages reviews; validates business existence via REST calls to Business Service
+- **Notification Service** – Sends alerts when reviews are posted
+- **RabbitMQ Broker** – Handles asynchronous messaging between services
 
-Part 1: Architecture Upgrade (Synchronous vs. Asynchronous)
-Current State (Synchronous): Review Service -> calls Notification Service directly via HTTP (Feign).
+---
 
-Problem: If the Notification Service is down, the Review Service fails or hangs. The user has to wait for the email to be sent before their review is saved.
+## Part 1: Architecture Upgrade (Synchronous vs. Asynchronous)
 
-New State (Asynchronous with RabbitMQ): Review Service -> sends a message to RabbitMQ -> Notification Service picks it up later.
+### The Shift to Async Messaging
 
-Benefit: Decoupling. The Review Service doesn't care if the Notification Service is online. It saves the review, sends a message to the queue, and responds to the user immediately (Scalability & Fault Tolerance).
+Critical inter-service communication was transitioned from **synchronous HTTP** to **asynchronous messaging** using **RabbitMQ**.
 
+### Comparison
 
-The Change
-services:
-  # ... (Discovery, Gateway, Business Service remain the same) ...
+| Feature | Old Architecture (Synchronous) | New Architecture (Asynchronous) |
+|------|------------------------------|--------------------------------|
+| Communication | Review Service calls Notification Service directly via Feign Client (HTTP) | Review Service publishes an event to RabbitMQ |
+| Dependency | High coupling; if Notification Service is down, the request fails or hangs | Loose coupling; Review Service returns immediately |
+| Fault Tolerance | Low; failures propagate to users | High; messages persist until consumer recovers |
+| Performance | User waits for review save **and** email sending | User waits only for review save; notification is background |
 
-  # NEW: Message Broker
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"   # App communication port
-      - "15672:15672" # Management Dashboard (http://localhost:15672)
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+---
 
-  review-service:
-    build: ./review-service
-    container_name: review-service
-    ports:
-      - "8082:8082"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
-      - SPRING_RABBITMQ_HOST=rabbitmq # Connect to Rabbit container
-    depends_on:
-      - discovery-server
-      - business-service
-      - rabbitmq # Wait for RabbitMQ
+## Implementation Details
 
+### 1. The Broker (RabbitMQ)
 
-adding this to the review-service pom: https://spring.io/projects/spring-amqp
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-amqp</artifactId>
-</dependency>
+Added to `docker-compose.yml` to act as the message bus:
 
-adding this to: src/main/java/com/locafy/review/config/RabbitMQConfig.java
+```yaml
+rabbitmq:
+  image: rabbitmq:3.12-management
+  ports:
+    - "5672:5672"   # App communication port
+    - "15672:15672" # Management Dashboard
+```
 
-package com.locafy.review.config;
+---
 
-    import org.springframework.amqp.core.*;
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
+### 2. The Producer (Review Service)
 
-    @Configuration
-    public class RabbitMQConfig {
-        public static final String QUEUE = "notification.queue";
-        public static final String EXCHANGE = "review.exchange";
-        public static final String ROUTING_KEY = "review.routingKey";
+**Configuration**
+- Defines `notification.queue`
+- Defines `review.exchange`
+- Defines a routing key
 
-        @Bean
-        public Queue queue() { return new Queue(QUEUE); }
+**Logic**
+- Replaces direct `NotificationClient` calls
+- Injects `RabbitTemplate`
 
-        @Bean
-        public TopicExchange exchange() { return new TopicExchange(EXCHANGE); }
+```java
+// Async Fire-and-Forget
+rabbitTemplate.convertAndSend(
+    RabbitMQConfig.EXCHANGE,
+    RabbitMQConfig.ROUTING_KEY,
+    message
+);
+```
 
-        @Bean
-        public Binding binding(Queue queue, TopicExchange exchange) {
-            return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
-        }
-    }
+---
 
-and then 
-Update Service Logic: Modify ReviewService.java to use RabbitTemplate instead of NotificationClient.
+### 3. The Consumer (Notification Service)
 
+- **Listener**: Uses `@RabbitListener` to watch `notification.queue`
+- **Action**: Automatically consumes messages and logs them (simulating email sending)
 
+---
 
+## Part 2: CI/CD Pipeline (GitHub Actions)
 
+A complete CI/CD pipeline is defined in:
 
-old code to be added back
-package com.example.review_service;
+```
+.github/workflows/maven-docker.yml
+```
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+The pipeline automatically **builds, tests, and deploys** the system whenever code is pushed to the `main` branch.
 
-@SpringBootApplication
-@EnableDiscoveryClient
-@EnableFeignClients
-public class ReviewServiceApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(ReviewServiceApplication.class, args);
-    }
-}
+---
 
+### Pipeline Workflow
 
+1. **Checkout Code**  
+   Pulls the latest code from the repository
 
-Use this for Docker and not the intelij plugin:  docker compose up --build
+2. **Setup Java 17**  
+   Installs Eclipse Temurin JDK
 
+3. **Build & Test**  
+   Runs:
+   ```bash
+   mvn clean package
+   ```
+   - Compiles each microservice individually
+   - Runs all JUnit tests
+   - Pipeline stops on test failure
 
+4. **Dockerize**  
+   Builds Docker images using:
+   ```bash
+   docker compose build
+   ```
 
-# 1. Ensure fresh JARs are available
+5. **Deployment Smoke Test**  
+   - Spins up the entire architecture (5 services + RabbitMQ)
+   - Waits **30 seconds** for startup
+   - Verifies containers are running (`docker ps`)
+   - Checks logs for successful boot
+
+---
+
+### How to Monitor
+
+- Go to the **Actions** tab in the GitHub repository
+- **Green checkmark ✅** indicates a successful pipeline run
+
+---
+
+## How to Run Locally
+
+### Prerequisites
+
+- Docker Desktop (with **WSL 2** on Windows)
+- Java 17
+- Maven
+
+---
+
+### Build the JARs
+
+Before running Docker:
+
+```bash
 mvn clean package -DskipTests
+```
 
-# 2. Build and start containers using the V2 plugin
+---
+
+### Start and Build the Containers
+
+```bash
 docker compose up --build
+```
 
+---
 
-Step 4: CI/CD Pipeline (GitHub Actions)
-This pipeline will run every time you push code to GitHub. It will verify that your Java code compiles and that your Docker containers can build and start up successfully.
+### Tools for verification
 
-Create this file structure in your project root: .github/workflows/maven-docker.yml
+- **Eureka Dashboard**  
+  http://localhost:8761  
+  *(All services should be UP)*
+
+- **RabbitMQ Dashboard**  
+  http://localhost:15672  
+  **User/Pass:** `guest / guest`
+
+- **API Gateway**  
+  http://localhost:8080/api/businesses/1
+
+---
+
+### Testing with Postman
+
+1. Import the provided **Postman Collection** from the github repo
+2. Run automated tests
+3. **Create Review (Test 3)** – Sends a `POST` request via API Gateway
+4. **Verify Async Flow** – Check logs of `notification-service`
+
+**Expected Log Output:**
+```
+🐰 RABBITMQ MESSAGE RECEIVED: New Review Posted...
+```
+
