@@ -1,5 +1,4 @@
 name: Locafy CI/CD Pipeline
-
 on:
   push:
     branches: [ "main" ]
@@ -9,16 +8,16 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+
     defaults:
       run:
         working-directory: ./locafy-microservices
 
     steps:
-    # 1. Checkout Code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Setup Java 17
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -26,26 +25,43 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    # 3. Compile and Package with Maven
-    - name: Build with Maven
-      run: |
-        mvn clean package -DskipTests -f discovery-server/pom.xml
-        mvn clean package -DskipTests -f api-gateway/pom.xml
-        mvn clean package -DskipTests -f business-service/pom.xml
-        mvn clean package -DskipTests -f review-service/pom.xml
-        mvn clean package -DskipTests -f notification-service/pom.xml
+    # Setup Node.js (Required for Newman)
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
 
-    # 4. Build Docker Images (CI Step)
+    # Install Newman (The Postman CLI)
+    - name: Install Newman
+      run: npm install -g newman
+
+    # build projects
+    - name: Build and Test Services
+      run: |
+        mvn clean package -f discovery-server/pom.xml
+        mvn clean package -f api-gateway/pom.xml
+        mvn clean package -f business-service/pom.xml
+        mvn clean package -f review-service/pom.xml
+        mvn clean package -f notification-service/pom.xml
+
+    # Build Docker Images
     - name: Build Docker Images
       run: docker compose build
 
-    # 5. Deploy to Runner Environment (Test Deployment)
+    # Start Services (Deployment)
     - name: Start Services
       run: docker compose up -d
 
-    # 6. Verify Services are Running
-    - name: Check Running Containers
+    # 8. Wait for Healthy Services
+    # We wait 60 seconds to ensure RabbitMQ and Eureka are fully connected
+    - name: Wait for Startup
+      run: sleep 60
+
+    # 9. Run Postman Integration Tests (Newman)
+    - name: Run Postman Tests
       run: |
-        sleep 30 # Give services time to start
-        docker compose ps
+        newman run tests/postman_collection.json --verbose
+
+    - name: Test Notification-Service Activity
+      run: |
         docker logs notification-service

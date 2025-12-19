@@ -16,6 +16,6 @@ public class NotificationConsumer {
         log.info("------------------------------------------------");
         log.info("🐰 RABBITMQ MESSAGE RECEIVED: {}", message);
         log.info("------------------------------------------------");
-        // Here you would add logic to send actual Email/SMS
+        // Here we would add logic to send actual Email/SMS
     }
 }

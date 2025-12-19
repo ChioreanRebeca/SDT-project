@@ -1,0 +1,353 @@
+{
+	"info": {
+		"_postman_id": "locafy-rabbitmq-tests",
+		"name": "Locafy RabbitMQ Verification (Multi-Review)",
+		"description": "Advanced tests creating multiple reviews to verify RabbitMQ message flow.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Check RabbitMQ Health",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"RabbitMQ is Up\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "guest",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "guest",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:15672/api/overview",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "15672",
+					"path": ["api", "overview"]
+				}
+			}
+		},
+		{
+			"name": "2. Get Queue Stats (Pre-Check)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var publishCount = 0;",
+							"if (jsonData.message_stats && jsonData.message_stats.publish) {",
+							"    publishCount = jsonData.message_stats.publish;",
+							"}",
+							"// Store as integer to ensure math works later",
+							"pm.collectionVariables.set(\"initial_publish_count\", parseInt(publishCount));",
+							"console.log(\"Initial Publish Count: \" + publishCount);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "guest",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "guest",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:15672/api/queues/%2F/notification.queue",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "15672",
+					"path": ["api", "queues", "%2F", "notification.queue"]
+				}
+			}
+		},
+		{
+			"name": "3. Create Review A (Positive)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": 1,\n    \"rating\": 5,\n    \"comment\": \"Amazing service! (RabbitMQ Test A)\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reviews",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews"]
+				}
+			}
+		},
+		{
+			"name": "4. Create Review B (Neutral)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": 1,\n    \"rating\": 3,\n    \"comment\": \"It was okay. (RabbitMQ Test B)\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reviews",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews"]
+				}
+			}
+		},
+		{
+			"name": "5. Create Review C (Negative)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": 1,\n    \"rating\": 1,\n    \"comment\": \"Not great. (RabbitMQ Test C)\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reviews",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews"]
+				}
+			}
+		},
+		{
+			"name": "6. Create Review D (User Provided)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": 1,\n    \"rating\": 5,\n    \"comment\": \"Automated testing is great! (RabbitMQ Test D)\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reviews",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews"]
+				}
+			}
+		},
+		{
+			"name": "7. Create Review E (Final)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": 1,\n    \"rating\": 4,\n    \"comment\": \"Scalability test complete. (RabbitMQ Test E)\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reviews",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews"]
+				}
+			}
+		},
+		{
+			"name": "8. Verify Queue Stats (Increased by 5)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"5 Messages published to RabbitMQ\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    var initial = parseInt(pm.collectionVariables.get(\"initial_publish_count\"));",
+							"    var current = 0;",
+							"    ",
+							"    if (jsonData.message_stats && jsonData.message_stats.publish) {",
+							"        current = jsonData.message_stats.publish;",
+							"    }",
+							"    ",
+							"    console.log(\"Verifying Stats -> Initial: \" + initial + \", Current: \" + current);",
+							"    ",
+							"    // Robust check: Ensure count increased by exactly 5 OR more (to account for manual clicks)",
+							"    pm.expect(current).to.be.gte(initial + 5);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "guest",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "guest",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:15672/api/queues/%2F/notification.queue",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "15672",
+					"path": ["api", "queues", "%2F", "notification.queue"]
+				}
+			}
+		},
+		{
+			"name": "9. Get All Reviews (Persistence Check)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Reviews retrieved successfully\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.length).to.be.above(4); // Should have at least 5 now",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/reviews/business/1",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "reviews", "business", "1"]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "initial_publish_count",
+			"value": "0"
+		}
+	]
+}
