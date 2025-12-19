@@ -52,12 +52,10 @@ jobs:
     - name: Start Services
       run: docker compose up -d
 
-    # 8. Wait for Healthy Services
-    # We wait 60 seconds to ensure RabbitMQ and Eureka are fully connected
     - name: Wait for Startup
-      run: sleep 60
+      run: sleep 40
 
-    # 9. Run Postman Integration Tests (Newman)
+    # Run Postman Integration Tests (Newman)
     - name: Run Postman Tests
       run: |
         newman run tests/postman_collection.json --verbose
