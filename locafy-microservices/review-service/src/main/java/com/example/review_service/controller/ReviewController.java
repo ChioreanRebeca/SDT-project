@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+//REST Controller
 @RestController
-@RequestMapping("/api/reviews")
+@RequestMapping("/api/reviews")  //any incomming http that starts with /api/reviews should be sent to this class.
 public class ReviewController {
-    @Autowired
+    @Autowired  //this literally lets spring do this private ReviewService service = new ReviewService(); but smarter
     private ReviewService service;
 
     @PostMapping
@@ -18,7 +19,7 @@ public class ReviewController {
         return service.createReview(review);
     }
 
-    @GetMapping("/business/{businessId}")
+    @GetMapping("/business/{businessId}") // /api/reviews/business/{businessId} returns all reviews for the business
     public List<Review> getReviews(@PathVariable Long businessId) {
         return service.getReviewsForBusiness(businessId);
     }

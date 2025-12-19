@@ -14,7 +14,7 @@ public class NotificationController {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
 
-    @PostMapping
+    @PostMapping //handles http post requests sent to /api/notifications
     public void receiveNotification(@RequestBody String message) {
         // Simulating sending an email/SMS
         log.info("------------------------------------------------");

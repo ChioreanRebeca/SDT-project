@@ -25,7 +25,7 @@ public class ReviewService {
     private RabbitTemplate rabbitTemplate;
 
     public Review createReview(Review review) {
-        // 1. Inter-service Validation (Still Synchronous via Feign)
+        // Inter-service Validation (Still Synchronous via Feign)
         // We still need to confirm the business exists before saving the review
         try {
             businessClient.getBusiness(review.getBusinessId());
@@ -33,15 +33,17 @@ public class ReviewService {
             throw new RuntimeException("Invalid Business ID: " + review.getBusinessId());
         }
 
-        // 2. Persist Review
+        //save review in db
         Review saved = repository.save(review);
 
-        // 3. Trigger Notification (Asynchronous Event)
+        // Trigger Notification with rabbitmq (Asynchronous Event)
         // Instead of calling the API directly, we drop a message into the exchange
         String message = "New Review Posted for Business ID: " + review.getBusinessId();
 
         // Use constants from your RabbitMQConfig class
-        rabbitTemplate.convertAndSend(
+        // this is the direct method of sending a message wih rabit
+        //it is direct bc it uses the routing key
+        rabbitTemplate.convertAndSend(// converts from java to json
                 RabbitMQConfig.EXCHANGE,
                 RabbitMQConfig.ROUTING_KEY,
                 message
