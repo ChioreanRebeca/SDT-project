@@ -53,7 +53,7 @@ jobs:
       run: docker compose up -d
 
     - name: Wait for Startup
-      run: sleep 40
+      run: sleep 90
 
     # Run Postman Integration Tests (Newman)
     - name: Run Postman Tests
